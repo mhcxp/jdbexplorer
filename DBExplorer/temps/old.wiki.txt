@@ -1,0 +1,51 @@
+﻿=简介=
+
+　　在我平时的工作中 几乎每天都会使用到数据库客户端工具，使用它们来执行SQL，浏览数据，甚至修改表结构。而且在我的工具箱里还不止一个，从Oracle SQLPlus\到 SQLTools 、SQL Explorer（一个基于Eclipse的数据库客户端） 再到 强大的商业套件Aqua Data Studio、EMS.SQL.Manager等等，这些都是非常优秀的工具：功能强大、使用简单。但依然有一些原因促使我构建了DBExplorer，最主要的是：已有的这些工具都是C/S架构的程序，而我想让这一最基础的工具能够被一个团队里的所有开发人员们共享，使得大家通过浏览器就可以使用，从而把本机宝贵的性能资源释放出来，（对开发者来说总是觉得机器太慢，对Java开发者而言则更甚~）。令人高兴的是 现在我们有了DBExplorer，虽然它才刚刚起步，但已经能够很好的工作了。
+　　DBExplorer是一个B/S架构的Web程序，基于JDBC?连接数据库服务器，因此他几乎支持所有的常用数据库（据我所知 大部分数据库都有提供针对Java的JDBC接口）。虽然是Web程序但DBExplorer采用EXTJS控件库来构建界面，因此他不但具有漂亮的外观，也具有和C/S程序一样良好的使用体验。
+
+===基本特性===
+
+ 
+ * 支持数据库：ORACLE10g、MS SQLSERVER、MySQL、PostgreSQL、HSQLDB、Derby 
+ * 支持浏览器：Internet Explorer 6+、FireFox 1.5+(PC, Mac)、Safari 3+、Opera 9\+ (PC, Mac)
+ * 支持SQL执行查询
+ * 支持数据查看 并即时修改
+ * 支持LOB数据查看及修改
+ * 支持外键关联字段的修改备选
+ * 支持数据导出成多种格式：CSV、PDF、HTML、SQL
+
+===下载===
+
+ * [http://jdbexplorer.googlecode.com/files/DBExplorer.rar dbexplore.rar]
+
+ 
+
+===安装===
+
+ * 软件需求：JDK6+、Web容器。
+ * 根据需要下载[http://code.google.com/p/jdbexplorer/ sqlserver]，[http://code.google.com/p/jdbexplorer/ oracle]，[http://code.google.com/p/jdbexplorer/ mysql]等驱动。
+ * 展开下载的zip文件，并将dbe目录 copy到 Web容器的部署目录（例如：%TOMCAT%\webapps）即可。
+
+===后续计划加入功能===
+
+ * SQL输入器语法高亮
+ * 支持表结构的可视化修改
+
+===FAQ===
+{{{
+
+ * 为什么打开的Grid显示为只读，而且数据也不能即时修改。
+   可能是因为你打开的是一个View（视图），或者是一个无primary key（主键）的表（Table），因此导致 
+   数据无法修改。
+ * 如何添加对新数据库类型的支持？
+   向%dbe_dir%\WEB-INF\classes\dbe_config.js文件添加新的数据库条目，并正确的设置jdbc url模式，
+   然后将jdbc驱动（.jar文件）copy到classpath位置即可。
+ * 如何我们提出问题和建议
+   你可以[联系开发者#rds]里看到用于联系的E-Mail地址，你也可以通过 向我们提交问题。
+
+}}}
+
+===联系开发者===
+ * [mailto:cnetwei@gmail.com]
+ * [mailto:lxl.li2008@gmail.com]
+ * [mailto:ChenAnxin1018@gmail.com]
