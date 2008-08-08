@@ -56,6 +56,10 @@
 	background-image: url(images/run.gif) !important;
 }
 
+.runfile {
+	background-image: url(images/run_file.png) !important;
+}
+
 .copy {
 	background-image: url(images/copy.gif) !important;
 }

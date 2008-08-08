@@ -16,7 +16,7 @@ DBE.SQLQueryPanelActions = function(queryPanel) {
 	 */
 	this.exec = new Ext.Action({
 		text : '执行文件',
-		iconCls : 'open',
+		iconCls : 'runfile',
 		handler : function() {
 			Ext.ux.SwfUploader.upload({
 					upload_url : '../dbeSQLQueryAction/execSqlFile.do',
