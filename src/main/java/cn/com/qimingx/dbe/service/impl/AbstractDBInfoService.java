@@ -4,6 +4,7 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,10 +18,12 @@ import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.jdbc.support.lob.DefaultLobHandler;
 
 import cn.com.qimingx.core.ProcessResult;
+import cn.com.qimingx.dbe.FieldDataType;
 import cn.com.qimingx.dbe.LobObject;
 import cn.com.qimingx.dbe.TableColumnInfo;
 import cn.com.qimingx.dbe.TableDataInfo;
 import cn.com.qimingx.dbe.TableInfo;
+import cn.com.qimingx.dbe.action.bean.PkColumnObject;
 import cn.com.qimingx.dbe.service.DBInfoService;
 import cn.com.qimingx.dbe.service.WorkDirectory;
 import cn.com.qimingx.utils.sql.SQLExec;
@@ -144,37 +147,57 @@ public abstract class AbstractDBInfoService implements DBInfoService {
 	}
 
 	// 读取LOB值
-	public ProcessResult<LobObject> readLob(String table, String pkName,
-			Object pkValue, String fieldName, final WorkDirectory work) {
-		return lobHelper.readLob(table, pkName, pkValue, fieldName, work);
+	public ProcessResult<LobObject> readLob(String table,
+			List<PkColumnObject> pks, String fieldName, final WorkDirectory work) {
+		return lobHelper.readLob(table, pks, fieldName, work);
 	}
 
 	// 更新BLOB类型
-	public ProcessResult<String> updateBLob(String table, String pkName,
-			final Object pkValue, String fieldName, final File file) {
-		return lobHelper.updateBLob(table, pkName, pkValue, fieldName, file);
+	public ProcessResult<String> updateBLob(String table,
+			List<PkColumnObject> pks, String fieldName, final File file) {
+		return lobHelper.updateBLob(table, pks, fieldName, file);
 	}
 
 	// 更新CLOB
-	public ProcessResult<String> updateCLob(String table, String pkName,
-			final Object pkValue, String field, final String clob) {
-		return lobHelper.updateCLob(table, pkName, pkValue, field, clob);
+	public ProcessResult<String> updateCLob(String table,
+			List<PkColumnObject> pks, String field, final String clob) {
+		return lobHelper.updateCLob(table, pks, field, clob);
 	}
+
+	// 通过.sql文件来执行sql脚本
 	public ProcessResult<String> executeByFile(File file) {
-		ProcessResult<String> pr =new ProcessResult<String>();
+		ProcessResult<String> pr = new ProcessResult<String>();
 		SQLExec sqlexec = new SQLExec();
 		sqlexec.setSrc(file);
 		sqlexec.setPrint(true);
-//		sqlexec.setOutput(new File("c:/out.txt"));
+		// sqlexec.setOutput(new File("c:/out.txt"));
 		try {
-			sqlexec.execute(this.getDBConnection(),false);
+			sqlexec.execute(this.getDBConnection(), false);
+			String data = sqlexec.getResult();
+			pr.setData(data);
 		} catch (Exception e) {
-			log.debug("取得数据库连接出错~~!"+e.getMessage());
-			pr.setMessage("executeByFile 取得数据库连接出错~~!");
+			log.debug("执行数据脚本出错" + e.getMessage());
+			pr.setMessage("executeByFile 执行数据脚本出错~~!");
 			pr.setFailing(true);
 		}
 		pr.setSuccess(true);
 		return pr;
-		
+
+	}
+
+	// 返回数据类型列表，该方法中仅返回标准的、通用的数据类型信息
+	public List<FieldDataType> getDataTypes() {
+		List<FieldDataType> fdts = new ArrayList<FieldDataType>();
+		fdts.add(new FieldDataType("INTEGER"));
+		fdts.add(new FieldDataType("SMALLINT"));
+		fdts.add(new FieldDataType("NUMERIC"));
+		fdts.add(new FieldDataType("DECIMAL"));
+		fdts.add(new FieldDataType("CHAR"));
+		fdts.add(new FieldDataType("VARCHAR"));
+		fdts.add(new FieldDataType("DATE"));
+		fdts.add(new FieldDataType("TIMESTAMP"));
+		fdts.add(new FieldDataType("CLOB"));
+		fdts.add(new FieldDataType("BLOB"));
+		return fdts;
 	}
 }

@@ -2,8 +2,11 @@ package cn.com.qimingx.dbe.action;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
+import java.io.Writer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -37,9 +40,34 @@ public class DbeSQLQueryActionController extends AbstractDbeActionController {
 
 	//
 	private SQLQueryOperator sqlQueryOperator;
-
+	
+	//打开sql文件
+	public void openSqlFile(HttpServletRequest req, HttpServletResponse resp,
+			UploadFile param){
+		log.debug("open sqlfile dbeSQLQueryAction.openSqlFile," + param);
+		log.debug("param.getName():" + param.getName() + "param.getType():"
+				+ param.getType());
+		InputStream input =null;
+		Writer  writer = new StringWriter();
+		String str = null;
+		try {
+			input = param.getFile().getInputStream();
+			IOUtils.copy(input, writer);
+			str =writer.toString();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally{
+			IOUtils.closeQuietly(input);
+			IOUtils.closeQuietly(writer);
+		}
+ 
+		sendJSON(resp, str.toString() );
+		
+	}
+	//执行sql文件
 	public void execSqlFile(HttpServletRequest req, HttpServletResponse resp,
-			UploadFile param) {
+			UploadFile param){
 		log.debug("execute sqlfile dbeSQLQueryAction.execSqlFile," + param);
 		log.debug("param.getName():" + param.getName() + "param.getType():"
 				+ param.getType());
@@ -54,6 +82,7 @@ public class DbeSQLQueryActionController extends AbstractDbeActionController {
 		File file = workDirectory(req).newFile("temp.sql", null);
 		OutputStream output = null;
 		InputStream input = null;
+
 		try {
 			output = new FileOutputStream(file);
 			input = param.getFile().getInputStream();
@@ -64,6 +93,8 @@ public class DbeSQLQueryActionController extends AbstractDbeActionController {
 			ProcessResult<String> pr = service.executeByFile(file);
 			if (!pr.isSuccess()) {
 				sendErrorJSON(resp, pr.toJSON());
+			}else{
+				sendJSON(resp, pr.getData().toString());
 			}
 		} catch (Exception e) {
 			log.debug("execSqlFile.error:" + e.getMessage());
@@ -72,6 +103,7 @@ public class DbeSQLQueryActionController extends AbstractDbeActionController {
 			IOUtils.closeQuietly(input);
 			IOUtils.closeQuietly(output);
 		}
+		
 	}
 
 	// 执行SQL语句

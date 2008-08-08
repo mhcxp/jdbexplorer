@@ -1,7 +1,7 @@
 package cn.com.qimingx.dbe;
 
 import cn.com.qimingx.utils.ExtTypeInfo;
-
+import cn.com.qimingx.utils.SQLTypeUtils;
 
 /**
  * @author inc062805
@@ -9,11 +9,6 @@ import cn.com.qimingx.utils.ExtTypeInfo;
  * 描述Table的列信息
  */
 public class TableColumnInfo {
-	// 最大列宽度
-	public static final int MAX_COLUMN_WIDTH = 300;
-	// 最小列宽度
-	public static final int MIN_COLUMN_WIDTH = 100;
-
 	// 外键列信息
 	public static class FKColumnInfo {
 		private String table;
@@ -45,8 +40,12 @@ public class TableColumnInfo {
 	private String name;
 	// 列类型
 	private int type;
+	// sql 类型名称
+	private String typeName;
 	// 列大小
 	private int size;
+	// 小数位数
+	private int digits;
 	// 列是否可以为kong
 	private boolean nullable;
 	// 列默认值
@@ -59,6 +58,20 @@ public class TableColumnInfo {
 	private boolean fkColumn = false;
 	// 外键列信息
 	private FKColumnInfo fkInfo = null;
+	// 列备注信息
+	private String comment;
+
+	public TableColumnInfo() {
+	}
+
+	public TableColumnInfo(String name, int type, int size, boolean nullable) {
+		this.name = name;
+		this.type = type;
+		this.typeName = SQLTypeUtils.getJdbcTypeName(type);
+		this.size = size;
+		this.nullable = nullable;
+		extType = new ExtTypeInfo(type);
+	}	
 
 	public boolean isPkColumn() {
 		return pkColumn;
@@ -84,25 +97,6 @@ public class TableColumnInfo {
 		this.defaultValue = defaultValue;
 	}
 
-	public TableColumnInfo() {
-	}
-
-	public TableColumnInfo(String name, int type, int size, boolean nullable) {
-		this.name = name;
-		this.type = type;
-		this.size = size;
-		this.nullable = nullable;
-		extType = new ExtTypeInfo(type);
-	}
-
-	// 取得列的显示宽度
-	public int getDisplayWidth() {
-		int width = size > MAX_COLUMN_WIDTH ? MAX_COLUMN_WIDTH : size;
-		width = width < MIN_COLUMN_WIDTH ? MIN_COLUMN_WIDTH : width;
-
-		return width;
-	}
-
 	public String getName() {
 		return name;
 	}
@@ -116,6 +110,8 @@ public class TableColumnInfo {
 	}
 
 	public void setType(int type) {
+		this.typeName = SQLTypeUtils.getJdbcTypeName(type);
+		this.extType = new ExtTypeInfo(type);		
 		this.type = type;
 	}
 
@@ -125,13 +121,6 @@ public class TableColumnInfo {
 
 	public void setSize(int size) {
 		this.size = size;
-	}
-
-	public ExtTypeInfo getExtType() {
-		if (extType == null) {
-			extType = new ExtTypeInfo(type);
-		}
-		return extType;
 	}
 
 	public void setExtType(ExtTypeInfo extType) {
@@ -153,4 +142,35 @@ public class TableColumnInfo {
 	public void setFkInfo(FKColumnInfo fkInfo) {
 		this.fkInfo = fkInfo;
 	}
+
+	public String getTypeName() {
+		return typeName;
+	}
+
+	public void setTypeName(String typeName) {
+		this.typeName = typeName;
+	}
+
+	public int getDigits() {
+		return digits;
+	}
+
+	public void setDigits(int digits) {
+		this.digits = digits;
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+
+	public ExtTypeInfo getExtType() {
+		if (extType == null) {
+			extType = new ExtTypeInfo(type);
+		}
+		return extType;
+	}	
 }

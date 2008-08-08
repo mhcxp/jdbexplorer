@@ -41,21 +41,27 @@ DBE.DynamicTableGridActions = function(dtgrid, tableinfo) {
 			var selects = dtgrid.getSelectionModel().getSelections();
 			if (selects && selects.length > 0) {
 				if (confirm('您确认要删除选择的记录~?')) {
-					var ids = "";
+					// 生成主键信息
+					var pkName = tableinfo.pkColumnName;
+					var pkList = pkName.split(",");
+					var pksAll = new Array();
 					for (var i = 0; i < selects.length; i++) {
-						if (ids.length > 0) {
-							ids += ",";
+						var pks = new Array(pkList.length);
+						for (var x = 0; x < pkList.length; x++) {
+							var pk = pkList[x];
+							var pkColumn = tableinfo.getColumnInfoByName(pk);
+							pks[x] = {
+								pk : pk,
+								pkValue : selects[i].data[pk],
+								pkType : pkColumn.type
+							};
 						}
-						ids += selects[i].data[tableinfo.pkColumnName];
+						pksAll = pksAll.concat(pks);
 					}
-					// alert("remove ids:" + ids);
-					var pkColumn = tableinfo
-							.getColumnInfoByName(tableinfo.pkColumnName);
 					var data = {
-						pk : tableinfo.pkColumnName,
-						type : pkColumn.type,
-						value : ids
+						pkList : pksAll
 					};
+					
 					// 删除成功后，刷新数据源
 					var refreshStore = function(success) {
 						if (success) {
@@ -80,18 +86,29 @@ DBE.DynamicTableGridActions = function(dtgrid, tableinfo) {
 		var value = object.value;// 当前值
 		var oldValue = object.originalValue;// 原值
 		var record = object.record;// 记录对象
+
+		// 生成pk信息
+		var pkName = tableinfo.pkColumnName;
+		var pkList = pkName.split(",");
+		var pks = new Array(pkList.length);
+		for (var i = 0; i < pkList.length; i++) {
+			var pk = pkList[i];
+			var pkColumn = tableinfo.getColumnInfoByName(pk);
+			pks[i] = {
+				pk : pk,
+				pkValue : record.data[pk],
+				pkType : pkColumn.type
+			};
+		}
+
 		// 生成保存修改的数据对象
-		var pk = tableinfo.pkColumnName;
-		var pkColumn = tableinfo.getColumnInfoByName(pk);// 列信息
-		var pkType = pkColumn.type;
 		var data = {
-			pk : pk,
-			pkValue : record.data[tableinfo.pkColumnName],
-			pkType : pkType,
+			pkList : pks,
 			type : column.type,
 			field : colName,
 			value : value
 		};
+
 		// 排除日期类型（格式原因） 引起的误差
 		if (column.extType.type == 'date') {
 			if (value && value.format) {
@@ -141,17 +158,21 @@ DBE.DynamicTableGridActions = function(dtgrid, tableinfo) {
 				alert("程序错误：pkColumnName 无效~~!");
 				return false;
 			}
-			var pkValue = record.data[tableinfo.pkColumnName];
-			if (!pkValue || pkValue == '') {
-				alert("程序错误：主键值无效~~!");
-				return false;
+			// 生成pk信息
+			var pkList = pkName.split(",");
+			var pks = new Array(pkList.length);
+			for (var i = 0; i < pkList.length; i++) {
+				var pk = pkList[i];
+				var pkColumn = tableinfo.getColumnInfoByName(pk);
+				pks[i] = {
+					pk : pk,
+					pkValue : record.data[pk],
+					pkType : pkColumn.type
+				};
 			}
-			var pkType = tableinfo.getColumnInfoByName(pkName).type;
 			var params = {
 				tablename : table,
-				pk : pkName,
-				pkValue : pkValue,
-				pkType : pkType,
+				pkInfo : Ext.encode(pks),
 				field : colName
 			}
 

@@ -48,12 +48,24 @@
 	background-image: url(images/table.png) !important;
 }
 
+.openfile {
+	background-image: url(images/openfile.gif) !important;
+}
+
 .run {
 	background-image: url(images/run.gif) !important;
 }
 
 .copy {
 	background-image: url(images/copy.gif) !important;
+}
+
+.createtable {
+	background-image: url(images/table_add.png) !important;
+}
+
+.attribute {
+	background-image: url(images/attribute.png) !important;
 }
 
 .export {

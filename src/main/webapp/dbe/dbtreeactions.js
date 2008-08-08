@@ -164,7 +164,8 @@ DBE.DBTreePanelActions = function(dbtree, tabPanel) {
 			var type = getDBElementTypeOfNode(node);
 			var sql = false;
 			if (type == "TABLE" || type == "VIEW") {
-				sql = 'select * from ' + node.text;
+				var schema =node.parentNode.parentNode.text;
+				sql = 'select * from ' + schema+'.'+node.text;
 			} else if (type == "FIELD") {
 				var table = node.parentNode.text;
 				sql = 'select ' + node.text + ' from ' + table;
@@ -183,38 +184,58 @@ DBE.DBTreePanelActions = function(dbtree, tabPanel) {
 			DBE.copyToClipboard(node.text);
 		}
 	});
-	
-		/**
-	 * look over attribute
+
+	/**
+	 * 创建表
 	 */
-	this.copy = new Ext.Action({
+	this.createTable = new Ext.Action({
+		text : '创建表',
+		iconCls : 'createtable',
+		handler : function() {
+			// create TableInfoWindow
+			var window = new DBE.TableInfoWindow({
+				isCreate : true,// 是create，表示是创建新表
+				readOnly : false,
+				node : dbtree.getSelectNode()
+			});
+			window.show(Ext.getBody(), function() {
+				window.resetSize();
+			});
+		}
+	});
+
+	/**
+	 * 查看表或者服务器的属性
+	 */
+	this.attribute = new Ext.Action({
 		text : '属性',
 		iconCls : 'attribute',
 		handler : function() {
 			var node = dbtree.getSelectNode();
-		    var type = getDBElementTypeOfNode(node);
+			var type = getDBElementTypeOfNode(node);
 			if (type == "TABLE" || type == "VIEW") {
-				
-				var width =  Ext.getBody().getWidth()-544;
-				var height =  Ext.getBody().getHeight()-20;
-				var table = node.parentNode.text;
-				var cfg = {
-				node : node.id,
-				path : node.getPath('text'),
-				text : node.text,
-				type: type,
-				width:width,
-				height:height
-				};
-				var attributeWindow =  new DBE.AttributeWindow(cfg);
-				attributeWindow.show() ;
-				
-			} else  {
-				alert("not table");
+				// alert('open Table ' + node.text);
+				var wait = Ext.Msg.wait('读取中...', '请稍等');
+				// 取得列信息
+				DBE.getTableInfo(node, function(tableinfo) {
+					var columns = tableinfo.columns;
+					var window = new DBE.TableInfoWindow({
+						isCreate : false,// 不是create，表示是查看/修改表结构
+						readOnly : true,// TODO:目前暂时不允许表结构修改，将来功能完成后应设置成 仅视图只读
+						node : node
+					});
+					window.show(Ext.getBody(), function() {
+						window.resetSize();
+						window.getTableInfoPanel().initColumnInfo(columns);
+						wait.hide();
+					});
+				});
+			} else {
+				alert('未知的元素类型，，：' + type);
 			}
 		}
 	});
-	
+
 	/**
 	 * 根据当前dbtree Node的选择情况，设置 各个Action的可见状态
 	 */

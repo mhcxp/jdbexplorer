@@ -21,11 +21,10 @@ import cn.com.qimingx.dbe.action.bean.GridTableLoadBean;
 import cn.com.qimingx.dbe.action.bean.GridTableLongFieldInfoBean;
 import cn.com.qimingx.dbe.action.bean.GridTableUpdateBean;
 import cn.com.qimingx.dbe.action.bean.GridTableUpdateInfoBean;
-import cn.com.qimingx.dbe.action.bean.TreeNodeBean;
+import cn.com.qimingx.dbe.action.bean.PkColumnObject;
 import cn.com.qimingx.dbe.action.bean.GridTableUpdateInfoBean.UpdateValue;
 import cn.com.qimingx.dbe.service.DBInfoService;
 import cn.com.qimingx.dbe.service.WorkDirectory;
-import cn.com.qimingx.utils.SQLTypeUtils;
 
 /**
  * @author inc062805
@@ -103,9 +102,8 @@ public class GridOperator {
 			GridTableLongFieldInfoBean param, File file) {
 		String t = param.getTablename();// 表名称
 		String f = param.getField();// 字段名称
-		String pk = param.getPk();// 主键名称
-		Object pkv = param.getPkObject();// 主键值
-		ProcessResult<String> pr = service.updateBLob(t, pk, pkv, f, file);
+		List<PkColumnObject> pks = param.getPkList();// 主键
+		ProcessResult<String> pr = service.updateBLob(t, pks, f, file);
 		return pr;
 	}
 
@@ -114,9 +112,8 @@ public class GridOperator {
 			GridTableFieldInfoBean param, String clob) {
 		String t = param.getTablename();// 表名称
 		String f = param.getField();// 字段名称
-		String pk = param.getPk();// 主键名称
-		Object pkv = param.getPkObject();// 主键值
-		ProcessResult<String> pr = service.updateCLob(t, pk, pkv, f, clob);
+		List<PkColumnObject> pks = param.getPkList();// 主键
+		ProcessResult<String> pr = service.updateCLob(t, pks, f, clob);
 		return pr;
 	}
 
@@ -126,19 +123,26 @@ public class GridOperator {
 		ProcessResult<String> pr = new ProcessResult<String>(false);
 		try {
 			GridTableUpdateInfoBean update = param.getTableUpdate();
+			// params
+			Map<String, Object> params = new HashMap<String, Object>();
+
 			// 生成sql语句
+			String where = "";
+			for (PkColumnObject pk : update.getPkList()) {
+				if (where.length() > 0) {
+					where += " and ";
+				}
+				where += pk.getPk() + "=:" + pk.getPk();
+				params.put(pk.getPk(), pk.getPkValueObject());
+			}
 			String sql = "update " + param.getElementName();
 			sql += " SET " + update.getField() + "=:" + update.getField();
-			sql += " where " + update.getPk();
-			sql += "=:" + update.getPk();
+			sql += " where (" + where + ")";
 			log.debug("table.update.sql:" + sql);
 
 			// 生成参数
 			UpdateValue value = update.getUpdateValue();
-			Map<String, Object> params = new HashMap<String, Object>();
 			params.put(update.getField(), value.getValue());
-			params.put(update.getPk(), update.getPkObject());
-
 			return service.executeUpdate(sql, params);
 		} catch (Exception e) {
 			String msg = e.getMessage();
@@ -152,11 +156,32 @@ public class GridOperator {
 	public ProcessResult<String> remove(DBInfoService service,
 			GridTableUpdateBean params) {
 		// make sql
+		List<PkColumnObject> pkList = params.getTableUpdate().getPkList();
+		// params
+		Map<String, Object> map = new HashMap<String, Object>();
+		String where = "";
+		String first = null;
+		for (int i = 0; i < pkList.size(); i++) {
+			PkColumnObject pk = pkList.get(i);
+			if (first == null) {
+				first = pk.getPk();
+			} else if (first.equalsIgnoreCase(pk.getPk())) {
+				where += ")or(";
+			} else if (where.length() > 0) {
+				where += " and ";
+			}
+			String pkVarName = pk.getPk() + i;
+			where += pk.getPk() + "=:" + pkVarName;
+			
+			map.put(pkVarName, pk.getPkValueObject());
+		}
+
 		String sql = "delete from " + params.getElementName();
-		sql += " where " + params.getTableUpdate().getPk();
-		sql += " in (" + params.getTableUpdate().getValue() + ")";
+		sql += " where (" + where + ")";
+		// + params.getTableUpdate();.getPk();
+		// sql += " in (" + params.getTableUpdate().getValue() + ")";
 		log.debug("table.remove.sql:" + sql);
-		return service.executeUpdate(sql, null);
+		return service.executeUpdate(sql, map);
 	}
 
 	// 读取LOB类型的字段
@@ -165,9 +190,8 @@ public class GridOperator {
 		// read
 		String t = param.getTablename();// 表名称
 		String f = param.getField();// 字段名称
-		String pk = param.getPk();// 主键名称
-		Object pkv = param.getPkObject();// 主键值
-		ProcessResult<LobObject> lobPr = service.readLob(t, pk, pkv, f, work);
+		List<PkColumnObject> pks = param.getPkList();
+		ProcessResult<LobObject> lobPr = service.readLob(t, pks, f, work);
 
 		// return
 		ProcessResult<JSON> pr = new ProcessResult<JSON>(false);
@@ -285,50 +309,5 @@ public class GridOperator {
 		pr.setData(json);
 		return pr;
 	}
-	
-	
-	/**
-	 * 在grid中显示 指定元素的数据
-	 * 
-	 * @param service
-	 * @param param
-	 * @return
-	 */
-	public ProcessResult<JSON> loadColumn(DBInfoService service,
-			TreeNodeBean param) {
-		String type = param.getType();
-		if (type.equalsIgnoreCase("table") || type.equalsIgnoreCase("view")) {
-			return getTableColumns(service, param);
-		}
-		// otehrs...
 
-		// 无处理分支，返回空数据
-		ProcessResult<JSON> pr = new ProcessResult<JSON>(true);
-		pr.setData(new JSONArray());
-		return pr;
-	}
-	
-	private ProcessResult<JSON> getTableColumns(DBInfoService service,
-			TreeNodeBean param){
-		ProcessResult<TableInfo> prData;
-		prData = service.getTableInfo(param.getSchema(), param.getText());
-		List<TableColumnInfo> columns = prData.getData().getColumns();
-		JSONArray jsonArray = new JSONArray();
-		for(TableColumnInfo column : columns){
-			JSONObject jsonData = new JSONObject();
-//			SQLTypeUtils.getJdbcTypeName(column.getType());
-			jsonData.put("columName", column.getName());
-			jsonData.put("dataType", SQLTypeUtils.getJdbcTypeName(column.getType()));
-			jsonData.put("maxlength", column.getSize());
-			jsonData.put("isNull", column.isNullable());
-			jsonArray.add(jsonData);
-		}
-		JSONObject json = new JSONObject();
-		json.element("columns", jsonArray);
-
-		// return
-		ProcessResult<JSON> pr = new ProcessResult<JSON>(true);
-		pr.setData(json);
-		return pr;
-	}
 }

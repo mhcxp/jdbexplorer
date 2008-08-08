@@ -14,6 +14,7 @@ import cn.com.qimingx.core.ProcessResult;
 import cn.com.qimingx.dbe.action.bean.TreeNodeBean;
 import cn.com.qimingx.dbe.service.DBInfoService;
 import cn.com.qimingx.json.MyJSONUtils;
+import cn.com.qimingx.utils.SQLTypeUtils;
 
 /**
  * @author inc062805
@@ -27,10 +28,6 @@ public class TreeOperator {
 
 	/**
 	 * 取得当前指定Node 的子Nodes
-	 * 
-	 * @param service
-	 * @param node
-	 * @return
 	 */
 	public ProcessResult<JSON> tree(DBInfoService service, TreeNodeBean node) {
 		// load treenodes
@@ -67,8 +64,7 @@ public class TreeOperator {
 	/**
 	 * 删除 当前节点代表 的元素
 	 */
-	public ProcessResult<String> drop(DBInfoService service,
-			TreeNodeBean node) {
+	public ProcessResult<String> drop(DBInfoService service, TreeNodeBean node) {
 		ProcessResult<String> pr = new ProcessResult<String>(false);
 		String type = node.getType();
 		if (!type.equalsIgnoreCase("TABLE") && !type.equalsIgnoreCase("VIEW")) {
@@ -116,7 +112,7 @@ public class TreeOperator {
 		TableInfo tableInfo = prTableInfo.getData();
 
 		// 生成json
-		JSON jsont = MyJSONUtils.toJsonExclude(tableInfo, "size");
+		JSON jsont = MyJSONUtils.toJsonExclude(tableInfo);
 
 		JSONObject json = new JSONObject();
 		json.element("succeed", true);
@@ -217,4 +213,46 @@ public class TreeOperator {
 		pr.setData(json);
 		return pr;
 	}
+
+	//
+	public ProcessResult<JSON> getDataTypes(DBInfoService service) {
+		List<FieldDataType> fdts = service.getDataTypes();
+		JSONArray jsonArray = new JSONArray();
+		for (FieldDataType fdt : fdts) {
+			jsonArray.add(fdt.toJSON());
+		}
+		JSONObject json = new JSONObject();
+		json.element("types", jsonArray);
+		ProcessResult<JSON> pr = new ProcessResult<JSON>(true);
+		pr.setData(json);
+		return pr;
+	}
+
+	/**
+	 * 根据树节点获取表属性信息
+	 */
+	public ProcessResult<JSON> loadColumn(DBInfoService service,
+			TreeNodeBean param) {
+		ProcessResult<TableInfo> prData;
+		prData = service.getTableInfo(param.getSchema(), param.getText());
+		List<TableColumnInfo> columns = prData.getData().getColumns();
+		JSONArray jsonArray = new JSONArray();
+		for (TableColumnInfo column : columns) {
+			JSONObject jsonData = new JSONObject();
+			jsonData.put("columName", column.getName());
+			jsonData.put("dataType", SQLTypeUtils.getJdbcTypeName(column
+					.getType()));
+			jsonData.put("maxlength", column.getSize());
+			jsonData.put("isNull", column.isNullable());
+			jsonArray.add(jsonData);
+		}
+		JSONObject json = new JSONObject();
+		json.element("columns", jsonArray);
+
+		// return
+		ProcessResult<JSON> pr = new ProcessResult<JSON>(true);
+		pr.setData(json);
+		return pr;
+	}
+
 }

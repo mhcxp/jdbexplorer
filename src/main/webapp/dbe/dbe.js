@@ -17,13 +17,27 @@ DBE = function() {
 				alert("无法下载：URL为空~~!");
 			}
 		},
+		/**
+		 * 用于boolean类型的可选值
+		 */
 		booleanComboItemStore : new Ext.data.SimpleStore({
 			fields : ["name", "value"],
 			data : [['true', 'true'], ['false', 'false']]
 		}),
+		/**
+		 * 字段数据类型的可选值
+		 */
+		fieldDataTypesStore : new Ext.data.JsonStore({
+			url : '../dbeTreeAction/datatypes.do',
+			root : 'types',
+			fields : ['typeName', 'resetLength', 'resetScale']
+		}),
+		/**
+		 * 为Ajax控件添加事件，以处理login已失效的情况
+		 */
 		initAjaxListeners : function() {
 			// 初始化 Ajax事件监听器..
-			return;
+			return;// TODO:暂时因为无法处理 alert窗口的问题，先关闭该功能。
 			Ext.Ajax.on("requestcomplete", function(conn, response, opt) {
 				var json = response.responseText;
 				alert("@@@:" + json);

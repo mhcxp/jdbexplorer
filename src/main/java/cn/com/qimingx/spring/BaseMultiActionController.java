@@ -24,7 +24,7 @@ import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 /**
  * @author Wangwei
  * 
- *         Action的基类，暂时为空
+ * Action的基类，暂时为空
  */
 public class BaseMultiActionController extends MultiActionController {
 	// JSON 内容类型
@@ -150,6 +150,8 @@ public class BaseMultiActionController extends MultiActionController {
 			sendBinaryStream(resp, "application/octet-stream", stream);
 		} catch (FileNotFoundException e) {
 			log.error("FileNotFoundException for " + file.getAbsolutePath());
+		} catch (Throwable e) {
+			log.error("warn：" + e.getLocalizedMessage());
 		} finally {
 			IOUtils.closeQuietly(stream);
 		}

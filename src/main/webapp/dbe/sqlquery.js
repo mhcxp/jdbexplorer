@@ -29,6 +29,7 @@ DBE.SQLQueryPanel = function(config) {
 		tableinfo : {
 			columns : [{
 				name : 'Result',
+				id: 'Result',
 				extType : {
 					booleanType : false,
 					dateFormat : "",
@@ -43,16 +44,68 @@ DBE.SQLQueryPanel = function(config) {
 			}]
 		}
 	});
+	
 
-	var queryGridPanel = new Ext.Panel({
-		region : 'center',
+	
+	//构建数据窗口
+	var grid1 = new Ext.Panel({
+		title: '网格数据',
+ 		region : 'center',
 		minSize : 80,
 		layout : 'fit',
 		plain : true,
 		frame : false,
 		border : false,
-		items : grid
+		items:grid
 	});
+	
+	var message = new Ext.form.TextArea({
+			id : 'node',
+			value:""
+		})
+	//构建消息窗口
+	var grid2 = new Ext.Panel({
+		title: '消息窗口',
+ 		region : 'center',
+		minSize : 80,
+		layout : 'fit',
+		plain : true,
+		frame : false,
+		border : false,
+		items: message
+	});
+	
+	
+	var queryGridPanel = new Ext.TabPanel({
+		region:'center',
+		width:450,
+		height:300,
+        activeTab: 0,
+        frame:true,
+		items :[grid1,grid2]	
+	});
+	
+	
+	var ds = grid.getStore();
+		ds.on('load',function(){
+		var record =ds.getAt(0);
+		if(record!=null) 
+		{
+			var data = ds.getAt(0).data['Result'];
+			if(data==undefined){
+				//sql 为select语，显示数据窗口
+			 	queryGridPanel.setActiveTab(0);
+				}
+			else
+				{
+			//sql 为update,insert和delete时，显示消息窗口
+			 message.setValue(data);
+			 queryGridPanel.setActiveTab(1);
+				}
+		}
+
+	});
+
 
 	// 准备配置参数
 	var cfg = {
@@ -72,6 +125,9 @@ DBE.SQLQueryPanel = function(config) {
 
 	// 公布属性
 	this.grid = grid;
+	this.grid1 = grid1;
+	this.message = message;	
+	this.queryGridPanel= queryGridPanel;
 	this.sqlEditor = sqlEditor;
 	this.actions = actions;
 };
@@ -81,6 +137,7 @@ Ext.extend(DBE.SQLQueryPanel, Ext.Panel, {
 	 */
 	init : function(sql) {
 		if (sql && sql.length > 0) {
+		//	alert("runsql"+sql);
 			this.runSQL(sql);
 		} else {
 			// load初始空数据
@@ -110,12 +167,37 @@ Ext.extend(DBE.SQLQueryPanel, Ext.Panel, {
 				this.sqlEditor.setSQLText(sql);
 			}
 		}
+		
+		
 
 		if (sql && sql.length > 0) {
-			// alert("run.sql:" + sql);
 			this.grid.reload(sql);
+			this.queryGridPanel.setActiveTab(0);
 		} else {
 			alert("请输入SQL语句~~");
 		}
+	},
+	/*
+	 * 执行SQL文件，返回相应的消息
+	 *
+	 * */
+	runSQLFile: function(data){
+		this.message.setValue(data);
+		this.queryGridPanel.setActiveTab(1);
+		
+		
+	},
+	
+		/*
+	 * 打开SQL文件，将文件内容在sqlEditor中显示
+	 *
+	 * */
+	openSQLFile: function(data){
+ 		this.sqlEditor.setSQLText(data);
+		
 	}
+	
+	
+	
+	
 });

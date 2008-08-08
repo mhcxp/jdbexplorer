@@ -1,16 +1,15 @@
 // 表属性窗口定义
-DBE.AttributeWindow = function(config) {
+DBE.AttributeWindow = function(node,config) {
 	
-	// 获取
+	// 获取表的schema和database
 	var column ="";
 	var database = "";
 	var schema = "";
-	var path_array =config.path.split("/");
-    for (loop=0; loop < path_array.length;loop++){
+	var path_array =node.getPath('text').split("/");
   	 database = path_array[1];
   	 schema = path_array[2];  	
-  	}
 	
+  	//根据表构造显示表属性的grid
 	var cm = new Ext.grid.ColumnModel(
 	[	 new Ext.grid.RowNumberer(),
 		{header : '列名',dataIndex : 'columName',width:80},
@@ -21,13 +20,12 @@ DBE.AttributeWindow = function(config) {
 
 	var jsonds = new Ext.data.Store({
 		proxy : new Ext.data.HttpProxy({
-			url : '../dbeGridAction/loadTableAttribute.do'
+			url : '../dbeTreeAction/loadTableAttribute.do'
 		}),
 		baseParams: {
-		node : config.node,
-		path  : config.path,
-		text : config.text,
-		type : config.type
+		node : node.id,
+		path  : node.path,
+		text : node.text
 		},
 		reader : new Ext.data.JsonReader(
 		    
@@ -51,7 +49,7 @@ DBE.AttributeWindow = function(config) {
 				if (columName != '') {
 					column = columName;
 					jsonds1.proxy= new Ext.data.HttpProxy({
-					url: '../dbeGridAction/loadColumnPar.do?column='+column
+					url: '../dbeTreeAction/loadColumnPar.do?column='+column
 					});
  
 					jsonds1.load();
@@ -62,21 +60,22 @@ DBE.AttributeWindow = function(config) {
 	  
 	jsonds.load();
 
-	cm1 = new Ext.grid.ColumnModel(
+	
+	//根据列名构造显示列详细信息的grid
+	var cm1 = new Ext.grid.ColumnModel(
 	[	 new Ext.grid.RowNumberer(),
 		{header : '参数',dataIndex : 'parameter',width:200},
-		{header : '数值',dataIndex : 'value',width:config.width-200}
+		{header : '数值',dataIndex : 'value'}
 	]);
 	
-	jsonds1 = new Ext.data.Store({
+	var jsonds1 = new Ext.data.Store({
 		proxy : new Ext.data.HttpProxy({
-			url : '../dbeGridAction/loadColumnPar.do'
+			url : '../dbeTreeAction/loadColumnPar.do'
 		}),
 		baseParams: {
-		node : config.node,
-		path  : config.path,
-		text : config.text,
-		type : config.type
+		node : node.id,
+		path  : node.path,
+		text : node.text
 		},
 		reader : new Ext.data.JsonReader(
 		    
@@ -94,6 +93,7 @@ DBE.AttributeWindow = function(config) {
 	})
 	
 	jsonds1.load();
+	
 	
 	var attributeForm = new Ext.form.FormPanel({
 		id : 'attributeForm',
@@ -118,7 +118,8 @@ DBE.AttributeWindow = function(config) {
 				width : 270,
 				msgTarget : 'side',
 				xtype : 'textfield',
-				selectOnFocus : true
+				selectOnFocus : true,
+				readOnly: true
 			},
 			items : [{
 				id : 'fldDatabase',
@@ -136,7 +137,7 @@ DBE.AttributeWindow = function(config) {
 				id : 'fldTablename',
 				fieldLabel : 'table',
 				allowBlank : false,
-				value :config.text,
+				value :node.text,
 				name : 'tablename'
 			}]
 		}, _grid,clumnGrid],
@@ -160,9 +161,9 @@ DBE.AttributeWindow = function(config) {
 	var cfg = {
 		title : '表格属性',
 		id : 'attributeWindow',
+		width : 300,
+		height : 320,
 		layout : 'fit',
-		width : config.width,
-		height : config.height,
 		plain : true,
 		frame : true,
 		border : false,

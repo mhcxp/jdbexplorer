@@ -129,7 +129,8 @@ DBE.DynamicGrid = function(config) {
 			msg : "读取中..."
 		},
 		viewConfig : {
-			forceFit : true
+			// 字段数多于10个时，不进行强制平铺.
+			forceFit : fields.length < 10
 		},
 		listeners : {
 			cellcontextmenu : {

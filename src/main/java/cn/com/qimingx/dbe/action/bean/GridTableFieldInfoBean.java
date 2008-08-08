@@ -1,7 +1,12 @@
 package cn.com.qimingx.dbe.action.bean;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
 import cn.com.qimingx.core.WebParamBean;
-import cn.com.qimingx.utils.SQLTypeUtils;
 
 /**
  * @author inc062805
@@ -11,35 +16,16 @@ import cn.com.qimingx.utils.SQLTypeUtils;
 public class GridTableFieldInfoBean extends WebParamBean {
 	// 表名称
 	private String tablename;
-	// 主键名称
-	private String pk;
-	// 主键值
-	private String pkValue;
-	// 主键值类型
-	private int pkType;
+
+	// 主键信息列表
+	// private PkColumnObject pk;
+	private List<PkColumnObject> pkList;
+
+	// 主键信息 json字符串
+	private String pkInfo;
+
 	// 字段名称
 	private String field;
-
-	public Object getPkObject() {
-		Object value = SQLTypeUtils.getSQLValueObject(pkType, pkValue, null);
-		return value;
-	}
-
-	public String getPk() {
-		return pk;
-	}
-
-	public void setPk(String pk) {
-		this.pk = pk;
-	}
-
-	public String getPkValue() {
-		return pkValue;
-	}
-
-	public void setPkValue(String pkValue) {
-		this.pkValue = pkValue;
-	}
 
 	public String getField() {
 		return field;
@@ -57,11 +43,29 @@ public class GridTableFieldInfoBean extends WebParamBean {
 		this.tablename = tablename;
 	}
 
-	public int getPkType() {
-		return pkType;
+	public List<PkColumnObject> getPkList() {
+		if (pkList == null) {
+			JSONArray jpks = JSONArray.fromObject(pkInfo);
+			pkList = new ArrayList<PkColumnObject>(jpks.size());
+			for (int i = 0; i < jpks.size(); i++) {
+				JSONObject jpk = jpks.getJSONObject(i);
+				Object o = JSONObject.toBean(jpk, PkColumnObject.class);
+				PkColumnObject pko = (PkColumnObject) o;
+				pkList.add(pko);
+			}
+		}
+		return pkList;
 	}
 
-	public void setPkType(int pkType) {
-		this.pkType = pkType;
+	public void setPkList(List<PkColumnObject> pkList) {
+		this.pkList = pkList;
+	}
+
+	public String getPkInfo() {
+		return pkInfo;
+	}
+
+	public void setPkInfo(String pkInfo) {
+		this.pkInfo = pkInfo;
 	}
 }
