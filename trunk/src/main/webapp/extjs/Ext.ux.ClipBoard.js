@@ -15,6 +15,7 @@ Ext.CLIPBOARD_FLASH_URL = "../extjs/resources/_clipboard.swf";
  *            copyORcut True if this action is 'CUT', othetwise "COPY".Default
  *            action is "COPY".
  */
+Ext.namespace("Ext.ux");
 Ext.ux.ClipBoard = function(data, copyORcut) {
 	// 'copyORcut' could be boolean(true/fale),undefiend.
 	if (copyORcut) {

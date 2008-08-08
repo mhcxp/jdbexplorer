@@ -28,6 +28,7 @@ class HelperDBInfoServiceBase {
 	public String getDatabaseName() {
 		try {
 			String name = service.meta.getDatabaseProductName();
+			name = name.replaceAll("/", "-");
 			return name;
 		} catch (SQLException e) {
 			log.error("meta.getDatabaseProductName.ERROR：" + e.getMessage());

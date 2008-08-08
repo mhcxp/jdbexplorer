@@ -11,7 +11,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @author inc062805
  * 
- *         JDBC SQLType 相关工具
+ * JDBC SQLType 相关工具
  */
 public class SQLTypeUtils {
 	// logger
@@ -98,9 +98,10 @@ public class SQLTypeUtils {
 			// type = Types.ROWID;
 			// } else if ("SQLXML".equalsIgnoreCase(jdbcTypeName)) {
 			// type = Types.SQLXML;
-		} else {
-			throw new RuntimeException("jdbcTypeName 无效~");
 		}
+		//else {
+		//	throw new RuntimeException("jdbcTypeName 无效~");
+		//}
 		return type;
 	}
 
@@ -109,6 +110,7 @@ public class SQLTypeUtils {
 		boolean result = false;
 		switch (jdbcType) {
 		case Types.TINYINT:
+		case Types.SMALLINT:
 		case Types.BIGINT:
 		case Types.DECIMAL:
 		case Types.DOUBLE:
@@ -262,7 +264,7 @@ public class SQLTypeUtils {
 		case Types.LONGVARCHAR:
 			typeName = "LONGVARCHAR";
 			break;
-		//以下为JDK1.6才添加的内容	
+		// 以下为JDK1.6才添加的内容
 		// case Types.LONGNVARCHAR:
 		// typeName = "LONGNVARCHAR";
 		// break;

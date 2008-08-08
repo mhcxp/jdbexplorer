@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -18,6 +19,7 @@ import org.springframework.jdbc.support.lob.LobCreator;
 
 import cn.com.qimingx.core.ProcessResult;
 import cn.com.qimingx.dbe.LobObject;
+import cn.com.qimingx.dbe.action.bean.PkColumnObject;
 import cn.com.qimingx.dbe.service.WorkDirectory;
 
 /**
@@ -36,12 +38,20 @@ class HelperDBInfoServiceLob {
 	}
 
 	// 读取LOB类型的字段内容
-	public ProcessResult<LobObject> readLob(String table, String pkName,
-			Object pkValue, String fieldName, final WorkDirectory work) {
+	public ProcessResult<LobObject> readLob(String table,
+			List<PkColumnObject> pks, String fieldName, final WorkDirectory work) {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		String where = "";
+		for (PkColumnObject pk : pks) {
+			if (where.length() > 0) {
+				where += " and ";
+			}
+			where += pk.getPk() + "=:" + pk.getPk();
+			paramMap.put(pk.getPk(), pk.getPkValueObject());
+		}
 		String sql = "select " + fieldName + " from " + table;
-		sql += " where " + pkName + "=:id";
-		Map<String, Object> paramMap = new HashMap<String, Object>(1);
-		paramMap.put("id", pkValue);
+		sql += " where (" + where + ")";
+		log.debug("readLob.sql:" + sql);
 
 		LobStreamingResultSetExtractor extractor;
 		extractor = new LobStreamingResultSetExtractor(service.lobHandler, work);
@@ -59,11 +69,20 @@ class HelperDBInfoServiceLob {
 	}
 
 	// 更新BLOB类型
-	public ProcessResult<String> updateBLob(String table, String pkName,
-			final Object pkValue, String fieldName, final File file) {
+	public ProcessResult<String> updateBLob(String table,
+			final List<PkColumnObject> pks, String fieldName, final File file) {
 		ProcessResult<String> pr = new ProcessResult<String>(false);
+		String where = "";
+		for (PkColumnObject pk : pks) {
+			if (where.length() > 0) {
+				where += " and ";
+			}
+			where += pk.getPk() + "=?";
+		}
 		String sql = "update " + table + " SET " + fieldName;
-		sql += "=? where " + pkName + "=?";
+		sql += "=? where (" + where + ")";
+		log.debug("updateCLob.sql:" + sql);
+
 		InputStream input = null;
 		try {
 			input = new FileInputStream(file);
@@ -75,7 +94,10 @@ class HelperDBInfoServiceLob {
 						throws SQLException, DataAccessException {
 					lobc.setBlobAsBinaryStream(stat, 1, finput, (int) file
 							.length());
-					stat.setObject(2, pkValue);
+					int idx = 2;
+					for (PkColumnObject pk : pks) {
+						stat.setObject(idx++, pk.getPkValueObject());
+					}
 				}
 			};
 			service.jdbcTemplate.execute(sql, callback);
@@ -93,11 +115,21 @@ class HelperDBInfoServiceLob {
 	}
 
 	// 更新CLOB
-	public ProcessResult<String> updateCLob(String table, String pkName,
-			final Object pkValue, String field, final String clob) {
+	public ProcessResult<String> updateCLob(String table,
+			final List<PkColumnObject> pks, String field, final String clob) {
 		ProcessResult<String> pr = new ProcessResult<String>(false);
+		String where = "";
+		for (PkColumnObject pk : pks) {
+			if (where.length() > 0) {
+				where += " and ";
+			}
+			where += pk.getPk() + "=?";
+		}
+
 		String sql = "update " + table + " SET " + field;
-		sql += "=? where " + pkName + "=?";
+		sql += "=? where (" + where + ")";
+		log.debug("updateCLob.sql:" + sql);
+
 		try {
 			PreparedStatementCallback callback;
 			callback = new AbstractLobCreatingPreparedStatementCallback(
@@ -105,7 +137,10 @@ class HelperDBInfoServiceLob {
 				protected void setValues(PreparedStatement stat, LobCreator lobc)
 						throws SQLException, DataAccessException {
 					lobc.setClobAsString(stat, 1, clob);
-					stat.setObject(2, pkValue);
+					int idx = 2;
+					for (PkColumnObject pk : pks) {
+						stat.setObject(idx++, pk.getPkValueObject());
+					}
 				}
 			};
 			service.jdbcTemplate.execute(sql, callback);

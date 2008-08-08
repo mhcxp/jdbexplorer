@@ -64,8 +64,12 @@ public class SQLQueryOperator {
 		tableInfo.setData(data);
 
 		// return..
-		ProcessResult<JSON> ppr = new ProcessResult<JSON>(true);
-		ppr.setData(makeQueryResult(tableInfo));
+		ProcessResult<JSON> ppr = new ProcessResult<JSON>(pr.isSuccess());
+		if (ppr.isSuccess()) {
+			ppr.setData(makeQueryResult(tableInfo));
+		} else {
+			ppr.setMessage(pr.getMessage());
+		}
 		return ppr;
 	}
 

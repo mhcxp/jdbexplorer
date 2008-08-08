@@ -1,5 +1,8 @@
 package cn.com.qimingx.dbe.action.bean;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import net.sf.json.JSONObject;
 
 /**
@@ -23,7 +26,10 @@ public class GridTableUpdateBean extends TreeNodeBean {
 	public GridTableUpdateInfoBean getTableUpdate() {
 		if (tableUpdate == null) {
 			JSONObject json = JSONObject.fromObject(data);
-			Object obj = JSONObject.toBean(json, GridTableUpdateInfoBean.class);
+			Map<String, Class<?>> map = new HashMap<String, Class<?>>(1);
+			map.put("pkList", PkColumnObject.class);
+			Class<GridTableUpdateInfoBean> cls = GridTableUpdateInfoBean.class;
+			Object obj = JSONObject.toBean(json, cls, map);
 			return (GridTableUpdateInfoBean) obj;
 		}
 		return tableUpdate;

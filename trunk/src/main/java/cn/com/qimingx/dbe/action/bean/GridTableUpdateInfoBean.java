@@ -15,6 +15,34 @@ public class GridTableUpdateInfoBean extends GridTableFieldInfoBean {
 	// 字段格式
 	private String format;
 
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	public String getFormat() {
+		return format;
+	}
+
+	public void setFormat(String format) {
+		this.format = format;
+	}
+
+	public int getType() {
+		return type;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+
+	public UpdateValue getUpdateValue() {
+		return new UpdateValue(value, type, format);
+	}
+
 	/**
 	 * 描述更新Table record 的值对象
 	 */
@@ -38,33 +66,5 @@ public class GridTableUpdateInfoBean extends GridTableFieldInfoBean {
 		public Object getValue() {
 			return value;
 		}
-	}
-
-	public UpdateValue getUpdateValue() {
-		return new UpdateValue(value, type, format);
-	}
-
-	public String getValue() {
-		return value;
-	}
-
-	public void setValue(String value) {
-		this.value = value;
-	}
-
-	public String getFormat() {
-		return format;
-	}
-
-	public void setFormat(String format) {
-		this.format = format;
-	}
-
-	public int getType() {
-		return type;
-	}
-
-	public void setType(int type) {
-		this.type = type;
 	}
 }

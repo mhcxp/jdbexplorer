@@ -25,7 +25,6 @@ import cn.com.qimingx.dbe.action.bean.GridTableFieldInfoBean;
 import cn.com.qimingx.dbe.action.bean.GridTableLoadBean;
 import cn.com.qimingx.dbe.action.bean.GridTableLongFieldInfoBean;
 import cn.com.qimingx.dbe.action.bean.GridTableUpdateBean;
-import cn.com.qimingx.dbe.action.bean.TreeNodeBean;
 import cn.com.qimingx.dbe.service.DBInfoService;
 import cn.com.qimingx.dbe.service.WorkDirectory;
 
@@ -257,54 +256,7 @@ public class DbeGridActionController extends AbstractDbeActionController {
 		}
 	}
 	
-	// 
-	public void loadTableAttribute(HttpServletRequest req, HttpServletResponse resp,
-			TreeNodeBean param) {
-		
-		log.debug("call dbeAction.longfield:" + param);
-		ProcessResult<DBConnectionState> prDBCS = checkLogin(req);
-		if (prDBCS.isFailing()) {
-			log.error(prDBCS.getMessage());
-			sendJSON(resp, prDBCS.toJSON());
-			return;
-		}
-		ProcessResult<JSON> pr = null;
-		
-		if (param.getText() == null) {
-			pr = new ProcessResult<JSON>(false);
-			pr.setMessage("getTableAttribute Error:tablename is null~~!");
-			log.error(pr.getMessage());
-		} else {
-			log.debug("call loadTableAttribute,text:" + param.getText());
-			DBInfoService service = prDBCS.getData().getDBInfoService();
-			pr = gridOperator.loadColumn(service, param);
-			
-		}
-		
-//	    String	json = "{columns:[{columName:'ID',dataType:'12',maxlength:'100',isNull:'true'}]}";
-		if (pr.isSuccess()) {
-			sendJSON(resp,pr.getData().toString());
-		
-		} else {
-			sendError(resp, 500, pr.toJSON());
-		}
-		
-	}
-	
-	
-	public void loadColumnPar(HttpServletRequest req, HttpServletResponse resp,
-			TreeNodeBean param){
-		log.debug("load ColumPar......................!");
-		String columnname = req.getParameter("column");
-		String	json = "";
-		if(columnname !=null && !columnname.equals("")){
-			json = "{root:[{parameter:'默认值',value:'12'},{parameter:'精度',value:'1'},{parameter:'数值范围',value:'2000'},{parameter:'标识',value:'no'},{parameter:'列举',value:'233'}]}";
-		}
-		else{
-			json = "{root:[{parameter:'默认值',value:'24'},{parameter:'精度',value:'2'},{parameter:'数值范围',value:'4000'},{parameter:'标识',value:'yes'},{parameter:'列举',value:'4544'}]}";
-		}
-		sendJSON(resp, json);
-	}
+
 
 	public GridOperator getGridOperator() {
 		return gridOperator;

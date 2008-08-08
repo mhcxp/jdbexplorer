@@ -33,9 +33,10 @@ DBE.DynamicGridUtils = {
 		Ext.each(columnInfos, function(column) {
 			// 列是否隐藏，
 			var hidden = false;
-			if (tableInfo.pkColumnName && column.name == tableInfo.pkColumnName) {
-				hidden = true;// 默认主键列隐藏
-			}
+			//撤销了将主键隐藏的逻辑 by cnetwei
+			//if (tableInfo.pkColumnName && column.name == tableInfo.pkColumnName) {
+			//	hidden = true;// 默认主键列隐藏,
+			//}
 			// 列类型
 			var type = 'auto';
 			if (column.extType && column.extType.type) {

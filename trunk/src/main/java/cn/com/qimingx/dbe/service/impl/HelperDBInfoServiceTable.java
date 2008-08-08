@@ -32,8 +32,7 @@ class HelperDBInfoServiceTable {
 	private AbstractDBInfoService service;
 
 	// 构建器
-	public HelperDBInfoServiceTable(AbstractDBInfoService service,
-			Log log) {
+	public HelperDBInfoServiceTable(AbstractDBInfoService service, Log log) {
 		this.service = service;
 		this.log = log;
 	}
@@ -48,7 +47,7 @@ class HelperDBInfoServiceTable {
 			pr.setMessage("成功更新 " + updateRows + " 条记录。");
 			return pr;
 		} catch (DataAccessException e) {
-			pr.setMessage(e.getMessage());
+			pr.setMessage(e.getRootCause().getMessage());
 			log.error("执行SQL[" + sql + "]出错：" + pr.getMessage());
 			return pr;
 		}
@@ -130,7 +129,8 @@ class HelperDBInfoServiceTable {
 		// 设置主键标志
 		for (TableColumnInfo tci : prCI.getData()) {
 			String cname = tci.getName();
-			if (cname.equalsIgnoreCase(info.getPkColumnName())) {
+			String pkname = info.getPkColumnName();
+			if (pkname.indexOf(cname) > -1) {
 				tci.setPkColumn(true);
 			}
 		}
@@ -210,12 +210,12 @@ class HelperDBInfoServiceTable {
 			} else {
 				rs = service.meta.getPrimaryKeys(schema, null, name);
 			}
-			String pkName = null;
+			String pkName = "";
 			while (rs.next()) {
-				if (pkName != null) {
+				if (pkName.length() > 0) {
 					pkName += ",";
 				}
-				pkName = rs.getString("COLUMN_NAME");
+				pkName += rs.getString("COLUMN_NAME");
 			}
 			rs.close();
 
@@ -253,9 +253,11 @@ class HelperDBInfoServiceTable {
 				cinfo.setName(rs.getString("COLUMN_NAME"));
 				cinfo.setType(rs.getInt("DATA_TYPE"));
 				cinfo.setSize(rs.getInt("COLUMN_SIZE"));
+				cinfo.setDigits(rs.getInt("DECIMAL_DIGITS"));
 				int nullIdx = rs.getInt("NULLABLE");
 				cinfo.setNullable(nullIdx == DatabaseMetaData.columnNullable);
 				cinfo.setDefaultValue(rs.getString("COLUMN_DEF"));
+				cinfo.setComment(rs.getString("REMARKS"));
 				columns.add(cinfo);
 			}
 			rs.close();

@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 import cn.com.qimingx.core.ProcessResult;
+import cn.com.qimingx.dbe.FieldDataType;
 import cn.com.qimingx.dbe.LobObject;
 import cn.com.qimingx.dbe.TableColumnInfo;
 import cn.com.qimingx.dbe.TableDataInfo;
 import cn.com.qimingx.dbe.TableInfo;
+import cn.com.qimingx.dbe.action.bean.PkColumnObject;
 
 /**
  * @author Wangwei
@@ -55,22 +57,21 @@ public interface DBInfoService {
 	// 执行 查询数据库的SQL语句（指 SELECT），并返回查询结果..
 	ProcessResult<TableInfo> executeQuery(String sql, int start, int limit,
 			String condition);
-	
-	//通过sql文件执行SQL
+
+	// 通过sql文件执行SQL
 	ProcessResult<String> executeByFile(File file);
-	
 
 	// 读取LOB字段
-	ProcessResult<LobObject> readLob(String table, String pkName,
-			Object pkValue, String fieldName, WorkDirectory work);
+	ProcessResult<LobObject> readLob(String table, List<PkColumnObject> pks,
+			String fieldName, WorkDirectory work);
 
 	// 更新BLOB字段
-	ProcessResult<String> updateBLob(String table, String pkName,
-			Object pkValue, String fieldName, File file);
+	ProcessResult<String> updateBLob(String table, List<PkColumnObject> pks,
+			String fieldName, File file);
 
 	// 更新CLOB字段
-	ProcessResult<String> updateCLob(String table, String pkName,
-			final Object pkValue, String field, final String clob);
+	ProcessResult<String> updateCLob(String table, List<PkColumnObject> pks,
+			String field, final String clob);
 
 	// 数据库是否支持 可滚动的ResultSet
 	boolean supportScrollableResultSet();
@@ -80,4 +81,7 @@ public interface DBInfoService {
 
 	// 返回用于分页的SQL语句
 	String getLimitSQLString(String originalSQL);
+
+	// 返回当前数据库支持的数据类型列表
+	List<FieldDataType> getDataTypes();
 }

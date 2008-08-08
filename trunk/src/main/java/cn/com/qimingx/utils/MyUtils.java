@@ -104,6 +104,7 @@ public class MyUtils {
 			return Class.forName(clsName).newInstance();
 		} catch (Exception e) {
 			log.error("newObjectOfClassName出错：" + e.getMessage());
+			e.printStackTrace();
 			return null;
 		}
 	}

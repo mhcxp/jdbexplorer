@@ -24,21 +24,25 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author Unmi Executes a series of SQL statements or Sql File on a database
  *         using JDBC.
  */
 public class SQLExec extends JDBCTask {
+	
+	private static final Log log = LogFactory
+	.getLog(SQLExec.class);
 
-	private static Logger log = Logger.getLogger(SQLExec.class.getName());
-	static {
-		log.setLevel(Level.WARNING);
-	}
+//	private static Logger log = Logger.getLogger(SQLExec.class.getName());
+//	static {
+//		log.setLevel(Level.WARNING);
+//	}
 
 	// ���ָ�����
 	public static final String DELIMITER_TYPE_NORMAL = "normal";
@@ -155,6 +159,11 @@ public class SQLExec extends JDBCTask {
 		this.srcFile = srcFile;
 	}
 
+	
+	public String getResult(){
+		return  String.valueOf(this.goodSql)+"  OF  "+String.valueOf(this.totalSql)+"条记录被成功执行";
+	}
+	
 	/**
 	 * Set an inline SQL command to execute. NB: Properties are not expanded in
 	 * this text unless {@link #expandProperties} is set.
@@ -450,6 +459,10 @@ public class SQLExec extends JDBCTask {
 				Pattern p = Pattern.compile(regEx);
 				Matcher m = p.matcher(line);
 				line = m.replaceAll("");
+				//处理sql语句中的go关键字
+				if(line.startsWith("GO")||line.startsWith("go")){
+					line = "; " +line.substring(2);
+				}
 
 				// 处理以--开头的单行注释
 				if (line.startsWith("--")) {
@@ -484,7 +497,6 @@ public class SQLExec extends JDBCTask {
 						int index = line.indexOf("--");
 						line = line.substring(0, index - 1);
 					}
-					;
 				}
 				line = line.trim();
 
@@ -513,8 +525,7 @@ public class SQLExec extends JDBCTask {
 					sql.append("\n");
 				}
 			}
-			if ((delimiterType.equals(DELIMITER_TYPE_NORMAL)
-					&& sql.toString().endsWith(delimiter) && line.length() > 0)
+			if ((delimiterType.equals(DELIMITER_TYPE_NORMAL)&& sql.toString().endsWith(delimiter) && line.length() > 0)
 					|| (delimiterType.equals(DELIMITER_TYPE_ROW) && line
 							.equals(delimiter))) {
 				execSQL(sql.substring(0, sql.length() - delimiter.length()),
@@ -523,9 +534,9 @@ public class SQLExec extends JDBCTask {
 			}
 
 		}
-		System.out.println("################" + sql);
 		// Catch any statements not followed by ;
 		if (sql.length() > 0) {
+			log.debug("SQLExec.runStatements.sql"+sql);
 			execSQL(sql.toString(), out);
 		}
 	}
@@ -556,6 +567,7 @@ public class SQLExec extends JDBCTask {
 
 			ret = statement.execute(sql);
 			updateCount = statement.getUpdateCount();
+			log.debug("@@@@@@@@@@@UpdateCount"+updateCount);
 			resultSet = statement.getResultSet();
 			do {
 				if (!ret) {
@@ -582,17 +594,17 @@ public class SQLExec extends JDBCTask {
 
 			SQLWarning warning = conn.getWarnings();
 			while (warning != null) {
-				log.warning(" sql warning " + warning.getLocalizedMessage());
+				log.debug(" sql warning " + warning.getLocalizedMessage());
 				warning = warning.getNextWarning();
 			}
 			conn.clearWarnings();
 			goodSql++;
 		} catch (SQLException e) {
-			log.severe("Failed to execute: " + sql);
+			log.debug("Failed to execute: " + sql);
 			if (!onError.equals("continue")) {
 				throw e;
 			}
-			log.severe(e.toString());
+			log.debug(e.toString());
 		} finally {
 			if (resultSet != null) {
 				resultSet.close();
